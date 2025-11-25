@@ -136,7 +136,7 @@ jobs:
       run: echo "::add-matcher::src/electron/.github/problem-matchers/clang.json"
     - name: Run Clang-Tidy
       run: |
-        e init -f --root=$(pwd) --out=${ELECTRON_OUT_DIR} testing
+        e init -f --root=$(pwd) --out=${ELECTRON_OUT_DIR} testing --target-cpu ${TARGET_ARCH}
         e build --only-gen
         cd src/electron
         node script/yarn.js lint:clang-tidy --jobs 8 --out-dir ../out/${ELECTRON_OUT_DIR}
