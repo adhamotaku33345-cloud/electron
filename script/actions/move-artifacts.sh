@@ -48,7 +48,8 @@ cp_if_exist() {
 move_src_dirs_if_exist() {
   mkdir src_artifacts
 
-  dirs=("src/out/Default/gen/node_headers" \
+  dirs=("src/out/Default/gen" \
+    "src/out/Default/gen/node_headers" \
     "src/out/Default/overlapped-checker" \
     "src/out/Default/ffmpeg" \
     "src/out/Default/hunspell_dictionaries" \

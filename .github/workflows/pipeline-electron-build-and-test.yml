@@ -15,6 +15,10 @@ on:
         type: string
         description: 'What host to run the build'
         required: true
+      clang-tidy-runs-on:
+        type: string
+        description: 'What host to run clang-tidy on'
+        required: true
       test-runs-on:
         type: string
         description: 'What host to run the tests on'
@@ -22,6 +26,11 @@ on:
       build-container:
         type: string
         description: 'JSON container information for aks runs-on'
+        required: false
+        default: '{"image":null}'
+      clang-tidy-container:
+        type: string
+        description: 'JSON container information to run clang-tidy on'
         required: false
         default: '{"image":null}'
       test-container:
@@ -82,6 +91,18 @@ jobs:
       upload-to-storage: ${{ inputs.upload-to-storage }}
       is-asan: ${{ inputs.is-asan }}
       enable-ssh: ${{ inputs.enable-ssh }}
+    secrets: inherit
+  clang-tidy:
+    uses: ./.github/workflows/pipeline-segment-electron-clang-tidy.yml
+    if: ${{ (inputs.target-platform == 'macos' && inputs.target-arch == 'arm64') || (inputs.target-platform == 'win' && inputs.target-arch == 'x64') }}
+    permissions:
+      contents: read
+    needs: build
+    with:
+      clang-tidy-runs-on: ${{ inputs.clang-tidy-runs-on }}
+      clang-tidy-container: ${{ inputs.clang-tidy-container }}
+      target-platform: ${{ inputs.target-platform }}
+      target-arch: ${{ inputs.target-arch }}
     secrets: inherit
   test:
     uses: ./.github/workflows/pipeline-segment-electron-test.yml
