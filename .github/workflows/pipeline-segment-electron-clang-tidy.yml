@@ -97,6 +97,18 @@ jobs:
       with:
         name: src_artifacts_${{ env.ARTIFACT_KEY }}
         path: ./src_artifacts_${{ env.ARTIFACT_KEY }}
+    - name: Regenerate DEPS Hash
+      run: |
+        (cd src/electron && git checkout .) && node src/electron/script/generate-deps-hash.js
+        echo "DEPSHASH=$(cat src/electron/.depshash)" >> $GITHUB_ENV
+    - name: Add CHROMIUM_BUILDTOOLS_PATH to env
+      run: echo "CHROMIUM_BUILDTOOLS_PATH=$(pwd)/src/buildtools" >> $GITHUB_ENV
+    - name: Checkout Electron
+      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+      with:
+        path: src/electron
+        fetch-depth: 0
+        ref: ${{ github.event.pull_request.head.sha }}
     - name: Restore Src Artifacts
       run: ./src/electron/script/actions/restore-artifacts.sh
     - name: Run Electron Only Hooks
@@ -117,18 +129,6 @@ jobs:
           rm -rf src/third_party/depot_tools/win_toolchain/vs_files
           e d python3 src/build/vs_toolchain.py update --force
         fi
-    - name: Regenerate DEPS Hash
-      run: |
-        (cd src/electron && git checkout .) && node src/electron/script/generate-deps-hash.js
-        echo "DEPSHASH=$(cat src/electron/.depshash)" >> $GITHUB_ENV
-    - name: Add CHROMIUM_BUILDTOOLS_PATH to env
-      run: echo "CHROMIUM_BUILDTOOLS_PATH=$(pwd)/src/buildtools" >> $GITHUB_ENV
-    - name: Checkout Electron
-      uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
-      with:
-        path: src/electron
-        fetch-depth: 0
-        ref: ${{ github.event.pull_request.head.sha }}
     - name: Install Dependencies
       uses: ./src/electron/.github/actions/install-dependencies
     - name: Default GN gen
