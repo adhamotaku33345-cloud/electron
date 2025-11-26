@@ -130,6 +130,8 @@ jobs:
         name: src_artifacts_${{ env.ARTIFACT_KEY }}
         path: ./src_artifacts_${{ env.ARTIFACT_KEY }}
     - name: Restore Src Artifacts
+      # DEBUG: Try to see if the src artifacts are the cause of bad executable for gn on macOS
+      if: ${{ inputs.target-platform == 'linux' || inputs.target-platform == 'win' }}
       run: ./src/electron/script/actions/restore-artifacts.sh
     - name: Add Clang problem matcher
       shell: bash
