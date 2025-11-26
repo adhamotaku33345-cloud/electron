@@ -130,14 +130,16 @@ jobs:
         name: src_artifacts_${{ env.ARTIFACT_KEY }}
         path: ./src_artifacts_${{ env.ARTIFACT_KEY }}
     - name: Restore Src Artifacts
-      # DEBUG: Try to see if the src artifacts are the cause of bad executable for gn on macOS
-      if: ${{ inputs.target-platform == 'linux' || inputs.target-platform == 'win' }}
       run: ./src/electron/script/actions/restore-artifacts.sh
     - name: Add Clang problem matcher
       shell: bash
       run: echo "::add-matcher::src/electron/.github/problem-matchers/clang.json"
     - name: Run Clang-Tidy
       run: |
+        # When restored from src artifacts this is hitting a bad CPU type on macOS,
+        # so let's try removing it and hope that build-tools will replace it.
+        rm -f src/buildtools/mac/gn
+
         e init -f --root=$(pwd) --out=${ELECTRON_OUT_DIR} testing --target-cpu ${TARGET_ARCH}
 
         export GN_EXTRA_ARGS="target_cpu=\"${TARGET_ARCH}\""
