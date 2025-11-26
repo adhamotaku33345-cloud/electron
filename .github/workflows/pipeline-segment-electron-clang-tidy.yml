@@ -92,8 +92,19 @@ jobs:
       uses: ./src/electron/.github/actions/restore-cache-aks
       with:
         target-platform: ${{ inputs.target-platform }}
+    - name: Download Src Artifacts
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+      with:
+        name: src_artifacts_${{ env.ARTIFACT_KEY }}
+        path: ./src_artifacts_${{ env.ARTIFACT_KEY }}
+    - name: Restore Src Artifacts
+      run: ./src/electron/script/actions/restore-artifacts.sh
     - name: Run Electron Only Hooks
       run: |
+        # When restored from src artifacts this is hitting a bad CPU type on macOS,
+        # so let's try removing it and hope that build-tools will replace it.
+        rm -f src/buildtools/mac/gn
+
         echo "solutions=[{'name':'src/electron','url':None,'deps_file':'DEPS','custom_vars':{'process_deps':False},'managed':False}]" > tmpgclient
         if [ "${{ inputs.target-platform }}" = "win" ]; then
           echo "solutions=[{'name':'src/electron','url':None,'deps_file':'DEPS','custom_vars':{'process_deps':False,'install_sysroot':False,'checkout_win':True},'managed':False}]" > tmpgclient
@@ -124,22 +135,11 @@ jobs:
       run: |
         cd src/electron
         git pack-refs
-    - name: Download Src Artifacts
-      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
-      with:
-        name: src_artifacts_${{ env.ARTIFACT_KEY }}
-        path: ./src_artifacts_${{ env.ARTIFACT_KEY }}
-    - name: Restore Src Artifacts
-      run: ./src/electron/script/actions/restore-artifacts.sh
     - name: Add Clang problem matcher
       shell: bash
       run: echo "::add-matcher::src/electron/.github/problem-matchers/clang.json"
     - name: Run Clang-Tidy
       run: |
-        # When restored from src artifacts this is hitting a bad CPU type on macOS,
-        # so let's try removing it and hope that build-tools will replace it.
-        rm -f src/buildtools/mac/gn
-
         e init -f --root=$(pwd) --out=${ELECTRON_OUT_DIR} testing --target-cpu ${TARGET_ARCH}
 
         export GN_EXTRA_ARGS="target_cpu=\"${TARGET_ARCH}\""
